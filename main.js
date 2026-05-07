@@ -395,11 +395,19 @@ class Game {
                 ent.applyForce(force);
             }
 
-            // Natural Gravity (10% of mouse force, applies to entire screen)
+            // Natural Gravity (Global Homing Force)
             this.earths.forEach(earth => {
-                const gravityMag = (360 / 443.7) * 0.1; 
                 const gravityDir = earth.pos.copy().sub(ent.pos).normalize();
+                
+                // 1. Physical Force (mass-dependent)
+                const gravityMag = (360 / 443.7) * 0.15; // Slightly increased strength
                 ent.applyForce(gravityDir.multiply(gravityMag));
+
+                // 2. Velocity Bias (Persistent homing effect)
+                // This ensures they always tend to curve back even with high inertia
+                const biasStrength = 0.02;
+                ent.vel.x += gravityDir.x * biasStrength;
+                ent.vel.y += gravityDir.y * biasStrength;
             });
 
             ent.update(0.98); // Add subtle friction for stability
