@@ -201,14 +201,15 @@ class Game {
         this.modeElement = document.getElementById('gravity-mode');
         this.gameOverScreen = document.getElementById('game-over');
         this.finalScoreElement = document.getElementById('final-score-value');
-        this.restartBtn = document.getElementById('restart-btn');
+        this.modeSelectBtns = document.querySelectorAll('.mode-select-btn');
 
         this.width = window.innerWidth;
         this.height = window.innerHeight;
         this.canvas.width = this.width;
         this.canvas.height = this.height;
 
-        this.earth = new Earth(this.width / 2, this.height / 2);
+        this.currentMode = 'original'; // original, change, two-earth
+        this.earths = [];
         this.entities = [];
         this.particles = [];
         this.score = 0;
@@ -219,8 +220,10 @@ class Game {
         this.spawnTimer = 0;
         this.spawnInterval = 700; // ms
         this.survivalTimer = 0;
+        this.modeTimer = 0; // For 'change' mode
         this.startTime = Date.now();
 
+        this.setupMode('original');
         this.initEventListeners();
         this.animate();
     }
@@ -231,7 +234,7 @@ class Game {
             this.height = window.innerHeight;
             this.canvas.width = this.width;
             this.canvas.height = this.height;
-            this.earth.pos = new Vector2(this.width / 2, this.height / 2);
+            this.setupMode(this.currentMode); // Recalculate earth positions
         });
 
         window.addEventListener('mousemove', (e) => {
@@ -240,32 +243,58 @@ class Game {
         });
 
         window.addEventListener('mousedown', () => {
-            this.toggleGravity();
+            if (this.currentMode !== 'original') {
+                this.toggleGravity();
+            }
         });
 
-        this.restartBtn.addEventListener('click', () => {
-            this.reset();
+        this.modeSelectBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const mode = e.target.getAttribute('data-mode');
+                this.reset(mode);
+            });
         });
     }
 
+    setupMode(mode) {
+        this.currentMode = mode;
+        this.earths = [];
+        if (mode === 'two-earth') {
+            this.earths.push(new Earth(this.width * 0.25, this.height / 2));
+            this.earths.push(new Earth(this.width * 0.75, this.height / 2));
+        } else {
+            this.earths.push(new Earth(this.width / 2, this.height / 2));
+        }
+
+        if (mode === 'original') {
+            this.isAttracting = true;
+            this.modeElement.textContent = 'ORIGINAL (ATTRACT ONLY)';
+            this.modeElement.className = 'mode-attract';
+        } else {
+            this.modeElement.textContent = this.isAttracting ? 'ATTRACT' : 'REPEL';
+            this.modeElement.className = this.isAttracting ? 'mode-attract' : 'mode-repel';
+        }
+    }
+
     toggleGravity() {
+        if (this.currentMode === 'original') return;
         this.isAttracting = !this.isAttracting;
         this.modeElement.textContent = this.isAttracting ? 'ATTRACT' : 'REPEL';
         this.modeElement.className = this.isAttracting ? 'mode-attract' : 'mode-repel';
     }
 
-    reset() {
+    reset(mode = 'original') {
         this.score = 0;
         this.entities = [];
         this.particles = [];
         this.isGameOver = false;
         this.spawnInterval = 700;
+        this.modeTimer = 0;
         this.startTime = Date.now();
         this.scoreElement.textContent = '0';
         this.gameOverScreen.classList.add('hidden');
         this.isAttracting = true;
-        this.modeElement.textContent = 'ATTRACT';
-        this.modeElement.className = 'mode-attract';
+        this.setupMode(mode);
     }
 
     spawnEntity() {
@@ -277,9 +306,11 @@ class Game {
         else { x = -50; y = Math.random() * this.height; }
 
         const pos = new Vector2(x, y);
-        const toEarth = this.earth.pos.copy().sub(pos).normalize();
+        // Target a random Earth
+        const targetEarth = this.earths[Math.floor(Math.random() * this.earths.length)];
+        const toTarget = targetEarth.pos.copy().sub(pos).normalize();
         const speed = 2.5 + Math.random() * 2.5;
-        const vel = toEarth.multiply(speed);
+        const vel = toTarget.multiply(speed);
 
         if (Math.random() < 0.2) {
             // Spawn Item
@@ -314,6 +345,15 @@ class Game {
             this.scoreElement.textContent = Math.floor(this.score);
         }
 
+        // Mode Specific Logic: Change Mode (Auto toggle every 5s)
+        if (this.currentMode === 'change') {
+            this.modeTimer += deltaTime;
+            if (this.modeTimer >= 5000) {
+                this.toggleGravity();
+                this.modeTimer = 0;
+            }
+        }
+
         // Spawn Logic
         this.spawnTimer += deltaTime;
         if (this.spawnTimer >= this.spawnInterval) {
@@ -340,23 +380,25 @@ class Game {
                 ent.vel.add(force);
             }
 
-            ent.update(1.0); // No friction to ensure they keep moving
+            ent.update(1.0); // No friction
 
-            // Check Collision with Earth
-            const distToEarth = Vector2.distance(ent.pos, this.earth.pos);
-            if (distToEarth < ent.radius + this.earth.radius) {
-                if (ent instanceof Asteroid) {
-                    this.endGame();
-                } else if (ent instanceof Item) {
-                    this.score += ent.scoreValue;
-                    this.scoreElement.textContent = Math.floor(this.score);
-                    this.createExplosion(ent.pos, ent.color, 15);
-                    this.entities.splice(i, 1);
+            // Check Collision with Earths
+            this.earths.forEach(earth => {
+                const distToEarth = Vector2.distance(ent.pos, earth.pos);
+                if (distToEarth < ent.radius + earth.radius) {
+                    if (ent instanceof Asteroid) {
+                        this.endGame();
+                    } else if (ent instanceof Item) {
+                        this.score += ent.scoreValue;
+                        this.scoreElement.textContent = Math.floor(this.score);
+                        this.createExplosion(ent.pos, ent.color, 15);
+                        this.entities.splice(i, 1);
+                    }
                 }
-            }
+            });
 
             // Remove off-screen entities (far away)
-            if (distToEarth > 2000) {
+            if (ent.pos.x < -200 || ent.pos.x > this.width + 200 || ent.pos.y < -200 || ent.pos.y > this.height + 200) {
                 this.entities.splice(i, 1);
             }
         });
@@ -382,15 +424,17 @@ class Game {
         // Draw Entities
         this.particles.forEach(p => p.draw(this.ctx));
         this.entities.forEach(ent => ent.draw(this.ctx));
-        this.earth.draw(this.ctx);
+        this.earths.forEach(earth => earth.draw(this.ctx));
     }
 
     endGame() {
         this.isGameOver = true;
         this.finalScoreElement.textContent = Math.floor(this.score);
         this.gameOverScreen.classList.remove('hidden');
-        this.createExplosion(this.earth.pos, '#00d2ff', 50);
-        this.createExplosion(this.earth.pos, '#ff4444', 30);
+        this.earths.forEach(earth => {
+            this.createExplosion(earth.pos, '#00d2ff', 50);
+            this.createExplosion(earth.pos, '#ff4444', 30);
+        });
     }
 
     animate() {
