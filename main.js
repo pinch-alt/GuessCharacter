@@ -225,6 +225,7 @@ class Game {
         this.isGameOver = false;
         this.isAttracting = true;
         this.mousePos = new Vector2(this.width / 2, this.height / 2);
+        this.smoothMousePos = new Vector2(this.width / 2, this.height / 2);
 
         this.spawnTimer = 0;
         this.spawnInterval = 700; // ms
@@ -346,6 +347,11 @@ class Game {
     update(deltaTime) {
         if (this.isGameOver) return;
 
+        // Smooth Mouse Position Lerp
+        const lerpFactor = 0.15;
+        this.smoothMousePos.x += (this.mousePos.x - this.smoothMousePos.x) * lerpFactor;
+        this.smoothMousePos.y += (this.mousePos.y - this.smoothMousePos.y) * lerpFactor;
+
         // Survival Score (+10 per sec)
         this.survivalTimer += deltaTime;
         if (this.survivalTimer >= 1000) {
@@ -380,10 +386,10 @@ class Game {
 
         // Update Entities
         this.entities.forEach((ent, i) => {
-            // Apply Gravity Force from Mouse (Now using mass)
-            const distToMouse = Vector2.distance(ent.pos, this.mousePos);
+            // Apply Gravity Force from Smooth Mouse
+            const distToMouse = Vector2.distance(ent.pos, this.smoothMousePos);
             if (distToMouse < 360) {
-                const forceDir = this.mousePos.copy().sub(ent.pos).normalize();
+                const forceDir = this.smoothMousePos.copy().sub(ent.pos).normalize();
                 const forceMag = (360 - distToMouse) / 887.4;
                 const force = forceDir.multiply(this.isAttracting ? forceMag : -forceMag);
                 ent.applyForce(force);
@@ -398,7 +404,7 @@ class Game {
                 ent.applyForce(gravityDir.multiply(gravityMag));
             });
 
-            ent.update(1.0); // No friction
+            ent.update(0.98); // Add subtle friction for stability
 
             // Check Collision with Earths
             this.earths.forEach(earth => {
@@ -427,8 +433,8 @@ class Game {
 
         // Draw Gravity Field Visual
         const fieldGlow = this.ctx.createRadialGradient(
-            this.mousePos.x, this.mousePos.y, 0,
-            this.mousePos.x, this.mousePos.y, 150
+            this.smoothMousePos.x, this.smoothMousePos.y, 0,
+            this.smoothMousePos.x, this.smoothMousePos.y, 150
         );
         const fieldColor = this.isAttracting ? '0, 242, 255' : '255, 0, 85';
         fieldGlow.addColorStop(0, `rgba(${fieldColor}, 0.15)`);
@@ -436,7 +442,7 @@ class Game {
         
         this.ctx.fillStyle = fieldGlow;
         this.ctx.beginPath();
-        this.ctx.arc(this.mousePos.x, this.mousePos.y, 150, 0, Math.PI * 2);
+        this.ctx.arc(this.smoothMousePos.x, this.smoothMousePos.y, 150, 0, Math.PI * 2);
         this.ctx.fill();
 
         // Draw Entities
