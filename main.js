@@ -373,9 +373,9 @@ class Game {
         this.entities.forEach((ent, i) => {
             // Apply Gravity Force from Mouse (Now even softer)
             const distToMouse = Vector2.distance(ent.pos, this.mousePos);
-            if (distToMouse < 600) {
+            if (distToMouse < 360) {
                 const forceDir = this.mousePos.copy().sub(ent.pos).normalize();
-                const forceMag = (600 - distToMouse) / 23076;
+                const forceMag = (360 - distToMouse) / 23076;
                 const force = forceDir.multiply(this.isAttracting ? forceMag : -forceMag);
                 ent.vel.add(force);
             }
@@ -419,7 +419,7 @@ class Game {
         // Draw Gravity Field Visual
         const fieldGlow = this.ctx.createRadialGradient(
             this.mousePos.x, this.mousePos.y, 0,
-            this.mousePos.x, this.mousePos.y, 250
+            this.mousePos.x, this.mousePos.y, 150
         );
         const fieldColor = this.isAttracting ? '0, 242, 255' : '255, 0, 85';
         fieldGlow.addColorStop(0, `rgba(${fieldColor}, 0.15)`);
@@ -427,7 +427,7 @@ class Game {
         
         this.ctx.fillStyle = fieldGlow;
         this.ctx.beginPath();
-        this.ctx.arc(this.mousePos.x, this.mousePos.y, 250, 0, Math.PI * 2);
+        this.ctx.arc(this.mousePos.x, this.mousePos.y, 150, 0, Math.PI * 2);
         this.ctx.fill();
 
         // Draw Entities
