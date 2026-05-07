@@ -1,14 +1,38 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
-  <link href='/style.css' rel='stylesheet'>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earth Guard: Gravity Control</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
-  <script defer type="text/javascript" src="/main.js"></script>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="hud">
+            <div class="score-container">
+                <span class="label">SCORE</span>
+                <span id="score">0</span>
+            </div>
+            <div class="mode-container">
+                <span class="label">MODE</span>
+                <span id="gravity-mode" class="mode-attract">ATTRACT</span>
+            </div>
+        </div>
+
+        <div id="game-over" class="hidden">
+            <div class="modal">
+                <h1>GAME OVER</h1>
+                <p>Earth was destroyed...</p>
+                <div class="final-score">
+                    <span class="label">FINAL SCORE</span>
+                    <span id="final-score-value">0</span>
+                </div>
+                <button id="restart-btn">TRY AGAIN</button>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="main.js"></script>
 </body>
 </html>
