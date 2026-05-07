@@ -52,19 +52,25 @@ class Vector2 {
 }
 
 class Entity {
-    constructor(pos, vel, radius, color) {
+    constructor(pos, vel, radius, color, mass = 1) {
         this.pos = pos;
         this.vel = vel;
         this.radius = radius;
         this.color = color;
+        this.mass = mass;
         this.destroyed = false;
+    }
+
+    applyForce(force) {
+        // F = ma -> a = F/m
+        const acceleration = force.copy().multiply(1 / this.mass);
+        this.vel.add(acceleration);
     }
 
     update(friction = 1) {
         this.vel.multiply(friction);
         this.pos.add(this.vel);
     }
-
     draw(ctx) {
         ctx.beginPath();
         ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
@@ -112,7 +118,9 @@ class Earth extends Entity {
 class Asteroid extends Entity {
     constructor(pos, vel) {
         const radius = 10 + Math.random() * 15;
-        super(pos, vel, radius, '#888');
+        // Higher mass based on radius
+        const mass = radius * 0.5;
+        super(pos, vel, radius, '#888', mass);
         this.rotation = Math.random() * Math.PI * 2;
         this.rotationSpeed = (Math.random() - 0.5) * 0.1;
     }
@@ -148,7 +156,8 @@ class Item extends Entity {
             yellow: { color: '#ffff00', score: 70, radius: 12 }
         };
         const config = types[type];
-        super(pos, vel, config.radius, config.color);
+        // Items are lighter than asteroids
+        super(pos, vel, config.radius, config.color, config.radius * 0.2);
         this.type = type;
         this.scoreValue = config.score;
         this.glow = 0;
@@ -371,22 +380,22 @@ class Game {
 
         // Update Entities
         this.entities.forEach((ent, i) => {
-            // Apply Gravity Force from Mouse (Now even softer)
+            // Apply Gravity Force from Mouse (Now using mass)
             const distToMouse = Vector2.distance(ent.pos, this.mousePos);
             if (distToMouse < 360) {
                 const forceDir = this.mousePos.copy().sub(ent.pos).normalize();
                 const forceMag = (360 - distToMouse) / 4437;
                 const force = forceDir.multiply(this.isAttracting ? forceMag : -forceMag);
-                ent.vel.add(force);
+                ent.applyForce(force);
             }
 
-            // Apply Natural Gravity from Earths (Always Attract)
+            // Apply Natural Gravity from Earths (Always Attract, also using mass)
             this.earths.forEach(earth => {
                 const distToEarth = Vector2.distance(ent.pos, earth.pos);
                 // Stronger pull when closer to Earth
                 const gravityMag = 0.03 * (earth.radius / Math.max(distToEarth, 20));
                 const gravityDir = earth.pos.copy().sub(ent.pos).normalize();
-                ent.vel.add(gravityDir.multiply(gravityMag));
+                ent.applyForce(gravityDir.multiply(gravityMag));
             });
 
             ent.update(1.0); // No friction
