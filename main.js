@@ -217,7 +217,7 @@ class Game {
         this.mousePos = new Vector2(this.width / 2, this.height / 2);
 
         this.spawnTimer = 0;
-        this.spawnInterval = 1000; // ms
+        this.spawnInterval = 700; // ms
         this.survivalTimer = 0;
         this.startTime = Date.now();
 
@@ -259,7 +259,7 @@ class Game {
         this.entities = [];
         this.particles = [];
         this.isGameOver = false;
-        this.spawnInterval = 1000;
+        this.spawnInterval = 700;
         this.startTime = Date.now();
         this.scoreElement.textContent = '0';
         this.gameOverScreen.classList.add('hidden');
@@ -335,7 +335,7 @@ class Game {
             const distToMouse = Vector2.distance(ent.pos, this.mousePos);
             if (distToMouse < 600) {
                 const forceDir = this.mousePos.copy().sub(ent.pos).normalize();
-                const forceMag = (600 - distToMouse) / 2500;
+                const forceMag = (600 - distToMouse) / 3500;
                 const force = forceDir.multiply(this.isAttracting ? forceMag : -forceMag);
                 ent.vel.add(force);
             }
