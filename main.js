@@ -375,7 +375,7 @@ class Game {
             const distToMouse = Vector2.distance(ent.pos, this.mousePos);
             if (distToMouse < 360) {
                 const forceDir = this.mousePos.copy().sub(ent.pos).normalize();
-                const forceMag = (360 - distToMouse) / 23076;
+                const forceMag = (360 - distToMouse) / 17750;
                 const force = forceDir.multiply(this.isAttracting ? forceMag : -forceMag);
                 ent.vel.add(force);
             }
