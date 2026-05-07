@@ -390,7 +390,7 @@ class Game {
             const distToMouse = Vector2.distance(ent.pos, this.smoothMousePos);
             if (distToMouse < 360) {
                 const forceDir = this.smoothMousePos.copy().sub(ent.pos).normalize();
-                const forceMag = (360 - distToMouse) / 443.7;
+                const forceMag = (360 - distToMouse) / 295.8;
                 const force = forceDir.multiply(this.isAttracting ? forceMag : -forceMag);
                 ent.applyForce(force);
             }
@@ -400,7 +400,7 @@ class Game {
                 const gravityDir = earth.pos.copy().sub(ent.pos).normalize();
                 
                 // 1. Physical Force (mass-dependent)
-                const gravityMag = (360 / 443.7) * 0.15; // Slightly increased strength
+                const gravityMag = (360 / 295.8) * 0.15; // Proportional to new peak force
                 ent.applyForce(gravityDir.multiply(gravityMag));
 
                 // 2. Velocity Bias (Persistent homing effect)
