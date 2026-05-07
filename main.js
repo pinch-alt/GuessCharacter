@@ -395,7 +395,12 @@ class Game {
                 ent.applyForce(force);
             }
 
-            // Natural Gravity removed per user request
+            // Natural Gravity (10% of mouse force, applies to entire screen)
+            this.earths.forEach(earth => {
+                const gravityMag = (360 / 443.7) * 0.1; 
+                const gravityDir = earth.pos.copy().sub(ent.pos).normalize();
+                ent.applyForce(gravityDir.multiply(gravityMag));
+            });
 
             ent.update(0.98); // Add subtle friction for stability
 
