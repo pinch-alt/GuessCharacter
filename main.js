@@ -76,7 +76,7 @@ class Entity {
 
 class Earth extends Entity {
     constructor(x, y) {
-        super(new Vector2(x, y), new Vector2(0, 0), 54, '#00d2ff');
+        super(new Vector2(x, y), new Vector2(0, 0), 38, '#00d2ff');
         this.pulse = 0;
     }
 
@@ -375,7 +375,7 @@ class Game {
             const distToMouse = Vector2.distance(ent.pos, this.mousePos);
             if (distToMouse < 600) {
                 const forceDir = this.mousePos.copy().sub(ent.pos).normalize();
-                const forceMag = (600 - distToMouse) / 3500;
+                const forceMag = (600 - distToMouse) / 5000;
                 const force = forceDir.multiply(this.isAttracting ? forceMag : -forceMag);
                 ent.vel.add(force);
             }
