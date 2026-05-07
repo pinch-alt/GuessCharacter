@@ -76,7 +76,7 @@ class Entity {
 
 class Earth extends Entity {
     constructor(x, y) {
-        super(new Vector2(x, y), new Vector2(0, 0), 40, '#00d2ff');
+        super(new Vector2(x, y), new Vector2(0, 0), 60, '#00d2ff');
         this.pulse = 0;
     }
 
@@ -278,7 +278,7 @@ class Game {
 
         const pos = new Vector2(x, y);
         const toEarth = this.earth.pos.copy().sub(pos).normalize();
-        const speed = 1.5 + Math.random() * 2;
+        const speed = 2.5 + Math.random() * 2.5;
         const vel = toEarth.multiply(speed);
 
         if (Math.random() < 0.2) {
@@ -333,14 +333,14 @@ class Game {
         this.entities.forEach((ent, i) => {
             // Apply Gravity Force from Mouse
             const distToMouse = Vector2.distance(ent.pos, this.mousePos);
-            if (distToMouse < 400) {
+            if (distToMouse < 600) {
                 const forceDir = this.mousePos.copy().sub(ent.pos).normalize();
-                const forceMag = (400 - distToMouse) / 1500;
+                const forceMag = (600 - distToMouse) / 2000;
                 const force = forceDir.multiply(this.isAttracting ? forceMag : -forceMag);
                 ent.vel.add(force);
             }
 
-            ent.update(0.99); // Slight friction for better control
+            ent.update(1.0); // No friction to ensure they keep moving
 
             // Check Collision with Earth
             const distToEarth = Vector2.distance(ent.pos, this.earth.pos);
@@ -368,7 +368,7 @@ class Game {
         // Draw Gravity Field Visual
         const fieldGlow = this.ctx.createRadialGradient(
             this.mousePos.x, this.mousePos.y, 0,
-            this.mousePos.x, this.mousePos.y, 150
+            this.mousePos.x, this.mousePos.y, 250
         );
         const fieldColor = this.isAttracting ? '0, 242, 255' : '255, 0, 85';
         fieldGlow.addColorStop(0, `rgba(${fieldColor}, 0.15)`);
@@ -376,7 +376,7 @@ class Game {
         
         this.ctx.fillStyle = fieldGlow;
         this.ctx.beginPath();
-        this.ctx.arc(this.mousePos.x, this.mousePos.y, 150, 0, Math.PI * 2);
+        this.ctx.arc(this.mousePos.x, this.mousePos.y, 250, 0, Math.PI * 2);
         this.ctx.fill();
 
         // Draw Entities
