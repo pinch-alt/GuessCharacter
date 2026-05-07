@@ -390,19 +390,12 @@ class Game {
             const distToMouse = Vector2.distance(ent.pos, this.smoothMousePos);
             if (distToMouse < 360) {
                 const forceDir = this.smoothMousePos.copy().sub(ent.pos).normalize();
-                const forceMag = (360 - distToMouse) / 887.4;
+                const forceMag = (360 - distToMouse) / 443.7;
                 const force = forceDir.multiply(this.isAttracting ? forceMag : -forceMag);
                 ent.applyForce(force);
             }
 
-            // Apply Natural Gravity from Earths (Always Attract, also using mass)
-            this.earths.forEach(earth => {
-                const distToEarth = Vector2.distance(ent.pos, earth.pos);
-                // Stronger pull when closer to Earth
-                const gravityMag = 0.03 * (earth.radius / Math.max(distToEarth, 20));
-                const gravityDir = earth.pos.copy().sub(ent.pos).normalize();
-                ent.applyForce(gravityDir.multiply(gravityMag));
-            });
+            // Natural Gravity removed per user request
 
             ent.update(0.98); // Add subtle friction for stability
 
