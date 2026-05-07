@@ -375,7 +375,7 @@ class Game {
             const distToMouse = Vector2.distance(ent.pos, this.mousePos);
             if (distToMouse < 360) {
                 const forceDir = this.mousePos.copy().sub(ent.pos).normalize();
-                const forceMag = (360 - distToMouse) / 17750;
+                const forceMag = (360 - distToMouse) / 8875;
                 const force = forceDir.multiply(this.isAttracting ? forceMag : -forceMag);
                 ent.vel.add(force);
             }
@@ -384,7 +384,7 @@ class Game {
             this.earths.forEach(earth => {
                 const distToEarth = Vector2.distance(ent.pos, earth.pos);
                 // Stronger pull when closer to Earth
-                const gravityMag = 0.05 * (earth.radius / Math.max(distToEarth, 20));
+                const gravityMag = 0.03 * (earth.radius / Math.max(distToEarth, 20));
                 const gravityDir = earth.pos.copy().sub(ent.pos).normalize();
                 ent.vel.add(gravityDir.multiply(gravityMag));
             });
