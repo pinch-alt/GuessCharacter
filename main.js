@@ -414,10 +414,12 @@ class Game {
                 });
 
                 const homeDir = closestEarth.pos.copy().sub(ent.pos).normalize();
-                ent.applyForce(homeDir.multiply(0.15)); // Stronger homing force
+                ent.applyForce(homeDir.multiply(0.4)); // Much stronger homing force
             }
 
-            ent.update(0.985); // Increased friction for more stable/smooth movement
+            // Apply friction: Asteroids move at constant velocity (friction = 1.0) when no forces act
+            const friction = ent instanceof Asteroid ? 1.0 : 0.985;
+            ent.update(friction);
 
             // Check Collision with Earths
             this.earths.forEach(earth => {
