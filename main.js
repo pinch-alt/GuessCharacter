@@ -390,14 +390,12 @@ class Game {
             const distToMouse = Vector2.distance(ent.pos, this.smoothMousePos);
             if (distToMouse < 360) {
                 const forceDir = this.smoothMousePos.copy().sub(ent.pos).normalize();
-                const forceMag = (360 - distToMouse) / 295.8;
-                const force = forceDir.multiply(this.isAttracting ? forceMag : -forceMag);
+                const forceMag = (360 - distToMouse) / 200; // Increased force sensitivity
+                const force = forceDir.multiply(this.isAttracting ? forceMag : -forceMag * 1.5); // Stronger repulsion
                 ent.applyForce(force);
             }
 
-            // Planetary gravity and homing effects removed per user request
-
-            ent.update(0.98); // Add subtle friction for stability
+            ent.update(0.99); // Slightly less friction for more "fly out" effect
 
             // Check Collision with Earths
             this.earths.forEach(earth => {
@@ -414,8 +412,9 @@ class Game {
                 }
             });
 
-            // Remove off-screen entities (far away)
-            if (ent.pos.x < -200 || ent.pos.x > this.width + 200 || ent.pos.y < -200 || ent.pos.y > this.height + 200) {
+            // Remove off-screen entities (reduced margin for easier "flying out")
+            const margin = 50;
+            if (ent.pos.x < -margin || ent.pos.x > this.width + margin || ent.pos.y < -margin || ent.pos.y > this.height + margin) {
                 this.entities.splice(i, 1);
             }
         });

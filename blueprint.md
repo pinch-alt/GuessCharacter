@@ -20,10 +20,12 @@
 - **Typography**: Expressive sans-serif (Inter/Roboto) with bold headers for impact.
 - **Effects**: Multi-layered drop shadows, glowing particles, and smooth transitions.
 
-## Current Plan: Initial Implementation
-1.  **HTML/CSS Overhaul**: Setup full-screen canvas and HUD.
-2.  **Core Physics Engine**: Implement `Vector2` math and `Game` class.
-3.  **Entity System**: Create `Earth`, `Asteroid`, and `Item` classes.
-4.  **Input Logic**: Implement the gravity toggle (Click to switch Mode).
-5.  **Spawning & Collision**: Build the logic for survival and point collection.
-6.  **Game Over State**: Add restart logic and final score display.
+## Current Plan: Refinement & Deployment
+1.  **Asteroid Behavior Adjustment**: Modify `main.js` to allow asteroids to fly out of the screen more easily by reducing off-screen margins and adjusting physics.
+2.  **Git Deployment**: Stage all changes, commit with a descriptive message, and push to the remote repository.
+
+## Project History & Implementation Details
+- **Initial Setup**: Established core engine with Canvas and Vector math.
+- **Entity System**: Implemented Earth, Asteroid, and Item classes with physics.
+- **Gravity Modes**: Added 'Original', 'Change', and 'Two-Earth' modes for varied gameplay.
+- **UI/UX**: Integrated glassmorphism HUD and responsive design.
