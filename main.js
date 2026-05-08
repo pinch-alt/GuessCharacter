@@ -419,7 +419,7 @@ class Game {
                 });
 
                 const homeDir = closestEarth.pos.copy().sub(ent.pos).normalize();
-                ent.applyForce(homeDir.multiply(0.08)); // Reduced homing force (from 0.4)
+                ent.applyForce(homeDir.multiply(0.048)); // Further reduced homing force (by 40% from 0.08)
             }
 
             // Friction/Uniform Motion
