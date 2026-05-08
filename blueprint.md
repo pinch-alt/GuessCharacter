@@ -21,9 +21,9 @@
 - **Effects**: Multi-layered drop shadows, glowing particles, and smooth transitions.
 
 ## Current Plan: Refinement & Deployment
-1.  **Entity Restoration**: Fixed an issue where entities were deleted immediately upon spawning by increasing the off-screen removal margin.
-2.  **Earth Gravity Enhancement**: Increased the homing force (Earth's gravity) for asteroids.
-3.  **Uniform Motion**: Removed friction for asteroids to ensure they maintain constant velocity when not influenced by external forces.
+1.  **Homing Force Adjustment**: Reduced Earth's persistent homing force for asteroids to make it less aggressive.
+2.  **Persistent Repulsion State**: Implemented logic where asteroids repelled by the mouse stay in a "flying out" state, ignoring Earth's gravity until actively attracted again.
+3.  **Entity Restoration & Bounds**: Ensured entities spawn and enter the screen correctly by maintaining a healthy off-screen margin.
 4.  **Git Deployment**: Stage all changes, commit with a descriptive message, and push to the remote repository.
 
 ## Project History & Implementation Details
@@ -31,6 +31,6 @@
 - **Entity System**: Implemented Earth, Asteroid, and Item classes with physics.
 - **Gravity Modes**: Added 'Original', 'Change', and 'Two-Earth' modes.
 - **Physics Refinement**: Adjusted for smoother movement and controlled repulsion.
-- **Earth Homing**: Added and strengthened Earth's natural pull on drifting asteroids.
-- **Bug Fix**: Restored missing entities by adjusting spawn and disposal boundaries.
+- **Earth Homing**: Added persistent (but now weaker) natural pull on drifting asteroids.
+- **Repulsion Persistence**: Added state tracking to keep repelled asteroids moving away.
 - **Deployment**: Integrated Git workflow for updates.

@@ -59,6 +59,7 @@ class Entity {
         this.color = color;
         this.mass = mass;
         this.destroyed = false;
+        this.isBeingRepelled = false; // Persistent state for "flying out"
     }
 
     applyForce(force) {
@@ -347,7 +348,7 @@ class Game {
     update(deltaTime) {
         if (this.isGameOver) return;
 
-        // Smooth Mouse Position Lerp (Reduced from 0.15 for more smoothing)
+        // Smooth Mouse Position Lerp
         const lerpFactor = 0.08;
         this.smoothMousePos.x += (this.mousePos.x - this.smoothMousePos.x) * lerpFactor;
         this.smoothMousePos.y += (this.mousePos.y - this.smoothMousePos.y) * lerpFactor;
@@ -392,16 +393,20 @@ class Game {
 
             if (distToMouse < 360) {
                 const forceDir = this.smoothMousePos.copy().sub(ent.pos).normalize();
-                // forceMag reduced by 20%
                 const forceMag = ((360 - distToMouse) / 250) * 0.8; 
-                const forceMultiplier = this.isAttracting ? 1.0 : -1.2;
-                const force = forceDir.multiply(forceMag * forceMultiplier);
-                ent.applyForce(force);
+                
+                if (this.isAttracting) {
+                    ent.isBeingRepelled = false; // Reset state when attracted
+                    ent.applyForce(forceDir.multiply(forceMag));
+                } else {
+                    ent.isBeingRepelled = true; // Set state when repelled
+                    ent.applyForce(forceDir.multiply(-forceMag * 1.2));
+                }
                 inGravityField = true;
             }
 
-            // Homing logic: If not in gravity field or if it's an asteroid drifting, move towards closest Earth
-            if (ent instanceof Asteroid && !inGravityField) {
+            // Homing logic: If not in gravity field AND not in "flying out" state
+            if (ent instanceof Asteroid && !ent.isBeingRepelled) {
                 let closestEarth = this.earths[0];
                 let minDist = Vector2.distance(ent.pos, closestEarth.pos);
                 
@@ -414,10 +419,10 @@ class Game {
                 });
 
                 const homeDir = closestEarth.pos.copy().sub(ent.pos).normalize();
-                ent.applyForce(homeDir.multiply(0.4)); // Much stronger homing force
+                ent.applyForce(homeDir.multiply(0.08)); // Reduced homing force (from 0.4)
             }
 
-            // Apply friction: Asteroids move at constant velocity (friction = 1.0) when no forces act
+            // Friction/Uniform Motion
             const friction = ent instanceof Asteroid ? 1.0 : 0.985;
             ent.update(friction);
 
@@ -436,7 +441,7 @@ class Game {
                 }
             });
 
-            // Remove off-screen entities (Increased margin to prevent immediate deletion on spawn)
+            // Remove off-screen entities
             const margin = 200;
             if (ent.pos.x < -margin || ent.pos.x > this.width + margin || ent.pos.y < -margin || ent.pos.y > this.height + margin) {
                 this.entities.splice(i, 1);
