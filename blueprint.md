@@ -21,9 +21,10 @@
 - **Effects**: Multi-layered drop shadows, glowing particles, and smooth transitions.
 
 ## Current Plan: Refinement & Deployment
-1.  **Earth Gravity Enhancement**: Increased the homing force (Earth's gravity) for asteroids when they are outside the player's gravity field.
-2.  **Boundary Cleanup**: Reduced the off-screen removal margin to ensure deflected asteroids are deleted immediately upon leaving the screen.
-3.  **Git Deployment**: Stage all changes, commit with a descriptive message, and push to the remote repository.
+1.  **Entity Restoration**: Fixed an issue where entities were deleted immediately upon spawning by increasing the off-screen removal margin.
+2.  **Earth Gravity Enhancement**: Increased the homing force (Earth's gravity) for asteroids.
+3.  **Uniform Motion**: Removed friction for asteroids to ensure they maintain constant velocity when not influenced by external forces.
+4.  **Git Deployment**: Stage all changes, commit with a descriptive message, and push to the remote repository.
 
 ## Project History & Implementation Details
 - **Initial Setup**: Established core engine with Canvas and Vector math.
@@ -31,4 +32,5 @@
 - **Gravity Modes**: Added 'Original', 'Change', and 'Two-Earth' modes.
 - **Physics Refinement**: Adjusted for smoother movement and controlled repulsion.
 - **Earth Homing**: Added and strengthened Earth's natural pull on drifting asteroids.
+- **Bug Fix**: Restored missing entities by adjusting spawn and disposal boundaries.
 - **Deployment**: Integrated Git workflow for updates.

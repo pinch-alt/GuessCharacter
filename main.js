@@ -310,10 +310,10 @@ class Game {
     spawnEntity() {
         const side = Math.floor(Math.random() * 4);
         let x, y;
-        if (side === 0) { x = Math.random() * this.width; y = -50; }
-        else if (side === 1) { x = this.width + 50; y = Math.random() * this.height; }
-        else if (side === 2) { x = Math.random() * this.width; y = this.height + 50; }
-        else { x = -50; y = Math.random() * this.height; }
+        if (side === 0) { x = Math.random() * this.width; y = -100; }
+        else if (side === 1) { x = this.width + 100; y = Math.random() * this.height; }
+        else if (side === 2) { x = Math.random() * this.width; y = this.height + 100; }
+        else { x = -100; y = Math.random() * this.height; }
 
         const pos = new Vector2(x, y);
         // Target a random Earth
@@ -436,8 +436,8 @@ class Game {
                 }
             });
 
-            // Remove off-screen entities (reduced margin to delete deflected asteroids immediately)
-            const margin = 10;
+            // Remove off-screen entities (Increased margin to prevent immediate deletion on spawn)
+            const margin = 200;
             if (ent.pos.x < -margin || ent.pos.x > this.width + margin || ent.pos.y < -margin || ent.pos.y > this.height + margin) {
                 this.entities.splice(i, 1);
             }
