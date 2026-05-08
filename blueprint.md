@@ -21,11 +21,13 @@
 - **Effects**: Multi-layered drop shadows, glowing particles, and smooth transitions.
 
 ## Current Plan: Refinement & Deployment
-1.  **Asteroid Behavior Adjustment**: Modify `main.js` to allow asteroids to fly out of the screen more easily by reducing off-screen margins and adjusting physics.
-2.  **Git Deployment**: Stage all changes, commit with a descriptive message, and push to the remote repository.
+1.  **Gravity Logic Adjustment**: Reduced gravity force by 20% and smoothed mouse-driven movement (lerp & friction).
+2.  **Homing Mechanics**: Re-introduced homing logic for asteroids to target Earth when outside the gravity field.
+3.  **Git Deployment**: Stage all changes, commit with a descriptive message, and push to the remote repository.
 
 ## Project History & Implementation Details
 - **Initial Setup**: Established core engine with Canvas and Vector math.
 - **Entity System**: Implemented Earth, Asteroid, and Item classes with physics.
-- **Gravity Modes**: Added 'Original', 'Change', and 'Two-Earth' modes for varied gameplay.
-- **UI/UX**: Integrated glassmorphism HUD and responsive design.
+- **Gravity Modes**: Added 'Original', 'Change', and 'Two-Earth' modes.
+- **Physics Refinement**: Adjusted for smoother movement and controlled repulsion.
+- **Deployment**: Integrated Git workflow for updates.

@@ -347,8 +347,8 @@ class Game {
     update(deltaTime) {
         if (this.isGameOver) return;
 
-        // Smooth Mouse Position Lerp
-        const lerpFactor = 0.15;
+        // Smooth Mouse Position Lerp (Reduced from 0.15 for more smoothing)
+        const lerpFactor = 0.08;
         this.smoothMousePos.x += (this.mousePos.x - this.smoothMousePos.x) * lerpFactor;
         this.smoothMousePos.y += (this.mousePos.y - this.smoothMousePos.y) * lerpFactor;
 
@@ -388,14 +388,36 @@ class Game {
         this.entities.forEach((ent, i) => {
             // Apply Gravity Force from Smooth Mouse
             const distToMouse = Vector2.distance(ent.pos, this.smoothMousePos);
+            let inGravityField = false;
+
             if (distToMouse < 360) {
                 const forceDir = this.smoothMousePos.copy().sub(ent.pos).normalize();
-                const forceMag = (360 - distToMouse) / 200; // Increased force sensitivity
-                const force = forceDir.multiply(this.isAttracting ? forceMag : -forceMag * 1.5); // Stronger repulsion
+                // forceMag reduced by 20%
+                const forceMag = ((360 - distToMouse) / 250) * 0.8; 
+                const forceMultiplier = this.isAttracting ? 1.0 : -1.2;
+                const force = forceDir.multiply(forceMag * forceMultiplier);
                 ent.applyForce(force);
+                inGravityField = true;
             }
 
-            ent.update(0.99); // Slightly less friction for more "fly out" effect
+            // Homing logic: If not in gravity field or if it's an asteroid drifting, move towards closest Earth
+            if (ent instanceof Asteroid && !inGravityField) {
+                let closestEarth = this.earths[0];
+                let minDist = Vector2.distance(ent.pos, closestEarth.pos);
+                
+                this.earths.forEach(earth => {
+                    const d = Vector2.distance(ent.pos, earth.pos);
+                    if (d < minDist) {
+                        minDist = d;
+                        closestEarth = earth;
+                    }
+                });
+
+                const homeDir = closestEarth.pos.copy().sub(ent.pos).normalize();
+                ent.applyForce(homeDir.multiply(0.05)); // Subtle homing force
+            }
+
+            ent.update(0.985); // Increased friction for more stable/smooth movement
 
             // Check Collision with Earths
             this.earths.forEach(earth => {
@@ -412,8 +434,8 @@ class Game {
                 }
             });
 
-            // Remove off-screen entities (reduced margin for easier "flying out")
-            const margin = 50;
+            // Remove off-screen entities (increased margin slightly for safety)
+            const margin = 100;
             if (ent.pos.x < -margin || ent.pos.x > this.width + margin || ent.pos.y < -margin || ent.pos.y > this.height + margin) {
                 this.entities.splice(i, 1);
             }
