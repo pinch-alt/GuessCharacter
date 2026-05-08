@@ -21,8 +21,8 @@
 - **Effects**: Multi-layered drop shadows, glowing particles, and smooth transitions.
 
 ## Current Plan: Refinement & Deployment
-1.  **Gravity Logic Adjustment**: Reduced gravity force by 20% and smoothed mouse-driven movement (lerp & friction).
-2.  **Homing Mechanics**: Re-introduced homing logic for asteroids to target Earth when outside the gravity field.
+1.  **Earth Gravity Enhancement**: Increased the homing force (Earth's gravity) for asteroids when they are outside the player's gravity field.
+2.  **Boundary Cleanup**: Reduced the off-screen removal margin to ensure deflected asteroids are deleted immediately upon leaving the screen.
 3.  **Git Deployment**: Stage all changes, commit with a descriptive message, and push to the remote repository.
 
 ## Project History & Implementation Details
@@ -30,4 +30,5 @@
 - **Entity System**: Implemented Earth, Asteroid, and Item classes with physics.
 - **Gravity Modes**: Added 'Original', 'Change', and 'Two-Earth' modes.
 - **Physics Refinement**: Adjusted for smoother movement and controlled repulsion.
+- **Earth Homing**: Added and strengthened Earth's natural pull on drifting asteroids.
 - **Deployment**: Integrated Git workflow for updates.

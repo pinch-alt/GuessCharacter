@@ -414,7 +414,7 @@ class Game {
                 });
 
                 const homeDir = closestEarth.pos.copy().sub(ent.pos).normalize();
-                ent.applyForce(homeDir.multiply(0.05)); // Subtle homing force
+                ent.applyForce(homeDir.multiply(0.15)); // Stronger homing force
             }
 
             ent.update(0.985); // Increased friction for more stable/smooth movement
@@ -434,8 +434,8 @@ class Game {
                 }
             });
 
-            // Remove off-screen entities (increased margin slightly for safety)
-            const margin = 100;
+            // Remove off-screen entities (reduced margin to delete deflected asteroids immediately)
+            const margin = 10;
             if (ent.pos.x < -margin || ent.pos.x > this.width + margin || ent.pos.y < -margin || ent.pos.y > this.height + margin) {
                 this.entities.splice(i, 1);
             }
