@@ -5,26 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Guessing Game: Who is it?</title>
     <link rel="stylesheet" href="style.css">
-    <script type="importmap">
-      {
-        "imports": {
-          "@google/generative-ai": "https://esm.run/@google/generative-ai"
-        }
-      }
-    </script>
 </head>
 <body>
     <div id="app" class="container">
         <header>
             <h1>AI 추측 게임: 누구일까요?</h1>
             <p id="sub-title">7명의 친구를 등록하고 특징을 입력하세요.</p>
-            <div id="api-key-container">
-                <div class="api-key-wrapper">
-                    <input type="password" id="gemini-api-key" placeholder="Gemini API Key 입력 (추측 정확도 향상)">
-                    <button id="check-api-btn" class="small-btn">연동 확인</button>
-                    <span id="api-status" class="status-dot" title="연동 상태"></span>
-                </div>
-            </div>
         </header>
 
         <main id="game-view">
