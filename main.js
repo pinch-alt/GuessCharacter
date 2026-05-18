@@ -260,6 +260,100 @@ elements.resetBtn.addEventListener('click', () => {
     switchView('registration');
 });
 
+/**
+ * Voice Input Manager using Web Speech API
+ */
+class VoiceInputManager {
+    constructor() {
+        this.recognition = null;
+        this.isRecording = false;
+        this.activeBtn = null;
+        this.init();
+    }
+
+    init() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            console.warn("이 브라우저는 음성 인식을 지원하지 않습니다.");
+            document.querySelectorAll('.voice-btn').forEach(btn => btn.style.display = 'none');
+            return;
+        }
+
+        this.recognition = new SpeechRecognition();
+        this.recognition.lang = 'ko-KR';
+        this.recognition.interimResults = true;
+        this.recognition.continuous = false;
+
+        this.recognition.onstart = () => {
+            this.isRecording = true;
+            if (this.activeBtn) this.activeBtn.classList.add('recording');
+        };
+
+        this.recognition.onend = () => {
+            this.isRecording = false;
+            if (this.activeBtn) this.activeBtn.classList.remove('recording');
+            this.activeBtn = null;
+        };
+
+        this.recognition.onresult = (event) => {
+            const transcript = Array.from(event.results)
+                .map(result => result[0])
+                .map(result => result.transcript)
+                .join('');
+
+            if (this.activeBtn) {
+                const targetId = this.activeBtn.dataset.target;
+                const textarea = document.getElementById(targetId);
+                if (textarea && event.results[0].isFinal) {
+                    textarea.value = (textarea.value + ' ' + transcript).trim();
+                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+        };
+
+        this.recognition.onerror = (event) => {
+            console.error("Speech Recognition Error:", event.error);
+            this.stop();
+        };
+
+        document.querySelectorAll('.voice-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.toggle(btn);
+            });
+        });
+    }
+
+    toggle(btn) {
+        if (this.isRecording) {
+            this.stop();
+            if (this.activeBtn !== btn) {
+                this.start(btn);
+            }
+        } else {
+            this.start(btn);
+        }
+    }
+
+    start(btn) {
+        if (!this.recognition) return;
+        this.activeBtn = btn;
+        try {
+            this.recognition.start();
+        } catch (e) {
+            console.error("Recognition start failed:", e);
+        }
+    }
+
+    stop() {
+        if (!this.recognition) return;
+        this.recognition.stop();
+    }
+}
+
+// Initialize Voice Input
+const voiceManager = new VoiceInputManager();
+
 // Initial Focus
 window.addEventListener('DOMContentLoaded', () => {
     elements.nameInputs[0].focus();

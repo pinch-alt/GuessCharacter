@@ -201,6 +201,48 @@
         min-height: 150px;
         resize: vertical;
         margin-bottom: 20px;
+        padding-right: 60px !important;
+    }
+
+    .input-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    .voice-btn {
+        position: absolute;
+        right: 15px;
+        bottom: 35px; /* Adjusting for textarea margin-bottom */
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: none;
+        background: oklch(95% 0.02 260);
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px oklch(0% 0 0 / 0.1);
+        z-index: 10;
+    }
+
+    .voice-btn:hover {
+        background: oklch(90% 0.05 260);
+        transform: scale(1.1);
+    }
+
+    .voice-btn.recording {
+        background: oklch(60% 0.2 30);
+        color: white;
+        animation: voicePulse 1.5s infinite;
+    }
+
+    @keyframes voicePulse {
+        0% { box-shadow: 0 0 0 0 oklch(60% 0.2 30 / 0.6); }
+        70% { box-shadow: 0 0 0 15px oklch(60% 0.2 30 / 0); }
+        100% { box-shadow: 0 0 0 0 oklch(60% 0.2 30 / 0); }
     }
 
     .primary-btn {

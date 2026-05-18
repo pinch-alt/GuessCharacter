@@ -7,6 +7,7 @@ A web-based guessing game where users register 7 people, input their personality
 - **Registration Phase:** Input fields for 7 player names.
 - **Trait Entry Phase:** Each player provides detailed information about themselves.
 - **AI Guessing Phase:** Enter a description and get the most likely match from the registered players.
+- **Voice-to-Text:** Input traits and descriptions using voice commands for a more interactive experience.
 - **Gemini AI Integration:** Uses the Google Gemini API for deep semantic analysis and accurate personality matching.
 - **Modern UI:** Responsive design, smooth transitions, and vibrant aesthetics.
 
@@ -26,7 +27,11 @@ A web-based guessing game where users register 7 people, input their personality
     - [ ] Implement secure API key handling (user input).
     - [ ] Refactor `findBestMatch` to be asynchronous and use Gemini.
     - [ ] Add fallback logic for offline/no-key scenarios.
-6. [ ] Verification & Final Polishing.
+6. [ ] **Voice-to-Text Feature:**
+    - [ ] Add microphone buttons to input areas.
+    - [ ] Implement Web Speech API integration in JavaScript.
+    - [ ] Add visual feedback for active recording.
+7. [ ] Verification & Final Polishing.
 7. [ ] Deployment (via Git to GitHub Pages).
 
 ## Deployment Details
