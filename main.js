@@ -10,7 +10,8 @@ const state = {
     currentPhase: 'registration', // registration, trait-entry, guessing
     currentPlayerIndex: 0,
     maxPlayers: 7,
-    isApiConnected: false
+    isApiConnected: false,
+    apiKey: ''
 };
 
 // DOM Elements
@@ -157,14 +158,13 @@ function findBestMatch(input) {
  * AI Matching via Gemini API
  */
 async function findBestMatchAI(input) {
-    const apiKey = elements.apiKeyInput.value.trim();
-    if (!apiKey || !state.isApiConnected) {
+    if (!state.apiKey || !state.isApiConnected) {
         console.warn("API Key missing or not verified, falling back to legacy algorithm.");
         return findBestMatch(input);
     }
 
     try {
-        const genAI = new GoogleGenerativeAI(apiKey);
+        const genAI = new GoogleGenerativeAI(state.apiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const playerInfo = state.players.map(p => `- ${p.name}: ${p.traits}`).join('\n');
@@ -190,6 +190,8 @@ async function findBestMatchAI(input) {
         return matchedPlayer ? matchedPlayer.name : findBestMatch(input);
     } catch (error) {
         console.error("Gemini API Error:", error);
+        // On recurring errors, reset connection state
+        state.isApiConnected = false;
         updateApiStatus('error');
         return findBestMatch(input);
     }
@@ -199,8 +201,8 @@ async function findBestMatchAI(input) {
  * Validate Gemini API Key
  */
 async function validateApiKey() {
-    const apiKey = elements.apiKeyInput.value.trim();
-    if (!apiKey) {
+    const inputKey = elements.apiKeyInput.value.trim();
+    if (!inputKey) {
         alert("API Key를 입력해 주세요.");
         return;
     }
@@ -209,25 +211,41 @@ async function validateApiKey() {
     elements.checkApiBtn.disabled = true;
 
     try {
-        const genAI = new GoogleGenerativeAI(apiKey);
+        // Create instance with the provided key
+        const genAI = new GoogleGenerativeAI(inputKey);
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         
-        // Simple test request
-        const result = await model.generateContent("Hi");
+        // More robust test request
+        const result = await model.generateContent({
+            contents: [{ role: "user", parts: [{ text: "Respond with only the word 'OK'" }] }]
+        });
         const response = await result.response;
+        const text = response.text();
         
-        if (response.text()) {
-            updateApiStatus('connected');
+        if (text) {
+            state.apiKey = inputKey;
             state.isApiConnected = true;
-            alert("Gemini API가 성공적으로 연동되었습니다!");
+            updateApiStatus('connected');
+            alert("Gemini API가 성공적으로 연동되었습니다! 이제 AI 추측 모드를 사용할 수 있습니다.");
         } else {
-            throw new Error("Invalid response");
+            throw new Error("Empty response");
         }
     } catch (error) {
-        console.error("Validation Error:", error);
+        console.error("Validation Error Details:", error);
+        
+        let errorMessage = "API Key 연동에 실패했습니다.";
+        
+        if (error.message.includes("API_KEY_INVALID")) {
+            errorMessage = "유효하지 않은 API Key입니다. 키를 다시 확인해 주세요.";
+        } else if (error.message.includes("blocked") || error.message.includes("CORS")) {
+            errorMessage = "브라우저 보안 설정이나 확장 프로그램에 의해 요청이 차단되었습니다.";
+        } else if (error.message.includes("fetch")) {
+            errorMessage = "네트워크 연결이 불안정하거나 API 서버에 접속할 수 없습니다.";
+        }
+        
         updateApiStatus('error');
         state.isApiConnected = false;
-        alert("API Key가 유효하지 않거나 오류가 발생했습니다. 키를 다시 확인해 주세요.");
+        alert(errorMessage);
     } finally {
         elements.checkApiBtn.disabled = false;
     }
@@ -255,6 +273,11 @@ function updateApiStatus(status) {
 
 // API Key Validation
 elements.checkApiBtn.addEventListener('click', validateApiKey);
+
+// Key input enter key support
+elements.apiKeyInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') validateApiKey();
+});
 
 // Phase 1: Registration
 elements.startGameBtn.addEventListener('click', () => {
@@ -310,7 +333,14 @@ elements.guessBtn.addEventListener('click', async () => {
     elements.guessBtn.textContent = 'AI가 분석 중...';
     
     const startTime = Date.now();
-    const match = await findBestMatchAI(input);
+    
+    // Attempt AI matching if connected, else fallback
+    let match;
+    if (state.isApiConnected && state.apiKey) {
+        match = await findBestMatchAI(input);
+    } else {
+        match = findBestMatch(input);
+    }
     
     // Ensure the animation lasts at least 1.5 seconds for visual effect
     const elapsedTime = Date.now() - startTime;
