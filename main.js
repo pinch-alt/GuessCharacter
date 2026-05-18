@@ -9,7 +9,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
  * 배포 시에는 소스 코드에 키를 노출하지 않는 것이 좋으나, 사용자의 요청에 따라 여기에 미리 연동합니다.
  * 여기에 본인의 '무료 Gemini API 키'를 붙여넣으세요.
  */
-const GEMINI_API_KEY = "YOUR_FREE_GEMINI_API_KEY_HERE";
+const GEMINI_API_KEY = "AIzaSyCccSz48hcFdzjP06QERLm7KZMhNJkawMQ";
 
 // Application State
 const state = {
