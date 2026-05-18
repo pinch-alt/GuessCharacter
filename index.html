@@ -3,43 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Earth Guard: Gravity Control</title>
+    <title>AI Guessing Game: Who is it?</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
-        
-        <div id="hud">
-            <div class="score-container">
-                <span class="label">SCORE</span>
-                <span id="score">0</span>
-            </div>
-            <div class="mode-container">
-                <span class="label">MODE</span>
-                <span id="gravity-mode" class="mode-attract">ATTRACT</span>
-            </div>
-        </div>
+    <div id="app" class="container">
+        <header>
+            <h1>AI 추측 게임: 누구일까요?</h1>
+            <p id="sub-title">7명의 친구를 등록하고 특징을 입력하세요.</p>
+        </header>
 
-        <div id="game-over" class="hidden">
-            <div class="modal">
-                <h1>GAME OVER</h1>
-                <p>Earth was destroyed...</p>
-                <div class="final-score">
-                    <span class="label">FINAL SCORE</span>
-                    <span id="final-score-value">0</span>
-                </div>
-                
-                <div class="mode-selection">
-                    <p>Select Game Mode:</p>
-                    <div class="mode-buttons">
-                        <button class="mode-select-btn" data-mode="original">ORIGINAL</button>
-                        <button class="mode-select-btn" data-mode="change">CHANGE</button>
-                        <button class="mode-select-btn" data-mode="two-earth">TWO EARTH</button>
+        <main id="game-view">
+            <!-- Phase 1: Registration -->
+            <section id="registration-view" class="view active">
+                <div class="card">
+                    <h2>이름 등록</h2>
+                    <p>게임을 시작할 7명의 이름을 입력해 주세요.</p>
+                    <div id="registration-form">
+                        <div class="input-group">
+                            <input type="text" class="player-name-input" placeholder="1번 플레이어" required>
+                            <input type="text" class="player-name-input" placeholder="2번 플레이어" required>
+                            <input type="text" class="player-name-input" placeholder="3번 플레이어" required>
+                            <input type="text" class="player-name-input" placeholder="4번 플레이어" required>
+                            <input type="text" class="player-name-input" placeholder="5번 플레이어" required>
+                            <input type="text" class="player-name-input" placeholder="6번 플레이어" required>
+                            <input type="text" class="player-name-input" placeholder="7번 플레이어" required>
+                        </div>
+                        <button id="start-game-btn" class="primary-btn">다음 단계로</button>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
+
+            <!-- Phase 2: Trait Entry -->
+            <section id="trait-entry-view" class="view">
+                <div class="card">
+                    <h2 id="current-player-title">플레이어 정보 입력</h2>
+                    <p id="trait-instruction">자신을 가장 잘 표현하는 키워드, 취미, 성격 등을 적어주세요.</p>
+                    <textarea id="player-traits" placeholder="예: 운동을 좋아하고 성격이 밝으며 코딩이 취미입니다."></textarea>
+                    <div class="progress-container">
+                        <div id="progress-bar"></div>
+                    </div>
+                    <button id="next-trait-btn" class="primary-btn">입력 완료</button>
+                </div>
+            </section>
+
+            <!-- Phase 3: Guessing -->
+            <section id="guessing-view" class="view">
+                <div class="card">
+                    <h2>AI가 누구인지 맞춥니다!</h2>
+                    <p>7명 중 한 사람에 대한 설명을 입력해 보세요.</p>
+                    <textarea id="guess-input" placeholder="추측하고 싶은 사람의 특징을 자세히 입력하세요..."></textarea>
+                    <button id="guess-btn" class="primary-btn">누구일까요?</button>
+                    
+                    <div id="result-overlay" class="hidden">
+                        <div class="result-content">
+                            <h3>정답은...</h3>
+                            <div id="revealed-name">???</div>
+                            <button id="reset-game-btn" class="secondary-btn">다시 시작하기</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 AI Guessing Game</p>
+        </footer>
     </div>
     <script type="module" src="main.js"></script>
 </body>

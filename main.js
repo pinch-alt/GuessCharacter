@@ -1,500 +1,164 @@
 /**
- * Earth Guard: Gravity Control
- * Core Game Engine
+ * AI Guessing Game: Who is it?
+ * Main Application Logic
  */
 
-class Vector2 {
-    constructor(x = 0, y = 0) {
-        this.x = x;
-        this.y = y;
-    }
-
-    add(v) {
-        this.x += v.x;
-        this.y += v.y;
-        return this;
-    }
-
-    sub(v) {
-        this.x -= v.x;
-        this.y -= v.y;
-        return this;
-    }
-
-    multiply(scalar) {
-        this.x *= scalar;
-        this.y *= scalar;
-        return this;
-    }
-
-    magnitude() {
-        return Math.sqrt(this.x * this.x + this.y * this.y);
-    }
-
-    normalize() {
-        const mag = this.magnitude();
-        if (mag > 0) {
-            this.x /= mag;
-            this.y /= mag;
-        }
-        return this;
-    }
-
-    copy() {
-        return new Vector2(this.x, this.y);
-    }
-
-    static distance(v1, v2) {
-        const dx = v1.x - v2.x;
-        const dy = v1.y - v2.y;
-        return Math.sqrt(dx * dx + dy * dy);
-    }
-}
-
-class Entity {
-    constructor(pos, vel, radius, color, mass = 1) {
-        this.pos = pos;
-        this.vel = vel;
-        this.radius = radius;
-        this.color = color;
-        this.mass = mass;
-        this.destroyed = false;
-        this.isBeingRepelled = false; // Persistent state for "flying out"
-    }
-
-    applyForce(force) {
-        // F = ma -> a = F/m
-        const acceleration = force.copy().multiply(1 / this.mass);
-        this.vel.add(acceleration);
-    }
-
-    update(friction = 1) {
-        this.vel.multiply(friction);
-        this.pos.add(this.vel);
-    }
-    draw(ctx) {
-        ctx.beginPath();
-        ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        ctx.closePath();
-    }
-}
-
-class Earth extends Entity {
-    constructor(x, y) {
-        super(new Vector2(x, y), new Vector2(0, 0), 38, '#00d2ff');
-        this.pulse = 0;
-    }
-
-    draw(ctx) {
-        this.pulse += 0.05;
-        const pulseRadius = this.radius + Math.sin(this.pulse) * 3;
-
-        // Outer Glow
-        const gradient = ctx.createRadialGradient(
-            this.pos.x, this.pos.y, this.radius * 0.8,
-            this.pos.x, this.pos.y, this.radius * 2.5
-        );
-        gradient.addColorStop(0, 'rgba(0, 210, 255, 0.4)');
-        gradient.addColorStop(1, 'rgba(0, 210, 255, 0)');
-
-        ctx.beginPath();
-        ctx.arc(this.pos.x, this.pos.y, this.radius * 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
-        ctx.fill();
-
-        // Main Body
-        ctx.beginPath();
-        ctx.arc(this.pos.x, this.pos.y, pulseRadius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = this.color;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-        ctx.closePath();
-    }
-}
-
-class Asteroid extends Entity {
-    constructor(pos, vel) {
-        const radius = 10 + Math.random() * 15;
-        // Higher mass based on radius
-        const mass = radius * 0.5;
-        super(pos, vel, radius, '#888', mass);
-        this.rotation = Math.random() * Math.PI * 2;
-        this.rotationSpeed = (Math.random() - 0.5) * 0.1;
-    }
-
-    draw(ctx) {
-        this.rotation += this.rotationSpeed;
-        ctx.save();
-        ctx.translate(this.pos.x, this.pos.y);
-        ctx.rotate(this.rotation);
-        
-        ctx.beginPath();
-        ctx.moveTo(this.radius, 0);
-        for (let i = 1; i < 8; i++) {
-            const angle = (i / 8) * Math.PI * 2;
-            const r = this.radius * (0.8 + Math.random() * 0.4);
-            ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
-        }
-        ctx.closePath();
-        ctx.fillStyle = '#4a4a4a';
-        ctx.strokeStyle = '#777';
-        ctx.lineWidth = 2;
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-    }
-}
-
-class Item extends Entity {
-    constructor(pos, vel, type) {
-        const types = {
-            blue: { color: '#00f2ff', score: 30, radius: 8 },
-            green: { color: '#00ff88', score: 50, radius: 10 },
-            yellow: { color: '#ffff00', score: 70, radius: 12 }
-        };
-        const config = types[type];
-        // Items are lighter than asteroids
-        super(pos, vel, config.radius, config.color, config.radius * 0.2);
-        this.type = type;
-        this.scoreValue = config.score;
-        this.glow = 0;
-    }
-
-    draw(ctx) {
-        this.glow += 0.1;
-        const glowSize = this.radius * (1.2 + Math.sin(this.glow) * 0.3);
-
-        ctx.beginPath();
-        ctx.arc(this.pos.x, this.pos.y, glowSize, 0, Math.PI * 2);
-        ctx.fillStyle = this.color + '44'; // Transparent glow
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = this.color;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-    }
-}
-
-class Particle extends Entity {
-    constructor(pos, vel, color) {
-        super(pos, vel, Math.random() * 3, color);
-        this.life = 1.0;
-        this.decay = 0.02 + Math.random() * 0.02;
-    }
-
-    update() {
-        super.update();
-        this.life -= this.decay;
-        if (this.life <= 0) this.destroyed = true;
-    }
-
-    draw(ctx) {
-        ctx.globalAlpha = this.life;
-        super.draw(ctx);
-        ctx.globalAlpha = 1.0;
-    }
-}
-
-class Game {
-    constructor() {
-        this.canvas = document.getElementById('gameCanvas');
-        this.ctx = this.canvas.getContext('2d');
-        this.scoreElement = document.getElementById('score');
-        this.modeElement = document.getElementById('gravity-mode');
-        this.gameOverScreen = document.getElementById('game-over');
-        this.finalScoreElement = document.getElementById('final-score-value');
-        this.modeSelectBtns = document.querySelectorAll('.mode-select-btn');
-
-        this.width = window.innerWidth;
-        this.height = window.innerHeight;
-        this.canvas.width = this.width;
-        this.canvas.height = this.height;
-
-        this.currentMode = 'original'; // original, change, two-earth
-        this.earths = [];
-        this.entities = [];
-        this.particles = [];
-        this.score = 0;
-        this.isGameOver = false;
-        this.isAttracting = true;
-        this.mousePos = new Vector2(this.width / 2, this.height / 2);
-        this.smoothMousePos = new Vector2(this.width / 2, this.height / 2);
-
-        this.spawnTimer = 0;
-        this.spawnInterval = 700; // ms
-        this.survivalTimer = 0;
-        this.modeTimer = 0; // For 'change' mode
-        this.startTime = Date.now();
-
-        this.setupMode('original');
-        this.initEventListeners();
-        this.animate();
-    }
-
-    initEventListeners() {
-        window.addEventListener('resize', () => {
-            this.width = window.innerWidth;
-            this.height = window.innerHeight;
-            this.canvas.width = this.width;
-            this.canvas.height = this.height;
-            this.setupMode(this.currentMode); // Recalculate earth positions
-        });
-
-        window.addEventListener('mousemove', (e) => {
-            this.mousePos.x = e.clientX;
-            this.mousePos.y = e.clientY;
-        });
-
-        window.addEventListener('mousedown', () => {
-            if (this.currentMode !== 'original') {
-                this.toggleGravity();
-            }
-        });
-
-        this.modeSelectBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const mode = e.target.getAttribute('data-mode');
-                this.reset(mode);
-            });
-        });
-    }
-
-    setupMode(mode) {
-        this.currentMode = mode;
-        this.earths = [];
-        if (mode === 'two-earth') {
-            this.earths.push(new Earth(this.width * 0.25, this.height / 2));
-            this.earths.push(new Earth(this.width * 0.75, this.height / 2));
-        } else {
-            this.earths.push(new Earth(this.width / 2, this.height / 2));
-        }
-
-        if (mode === 'original') {
-            this.isAttracting = true;
-            this.modeElement.textContent = 'ORIGINAL (ATTRACT ONLY)';
-            this.modeElement.className = 'mode-attract';
-        } else {
-            this.modeElement.textContent = this.isAttracting ? 'ATTRACT' : 'REPEL';
-            this.modeElement.className = this.isAttracting ? 'mode-attract' : 'mode-repel';
-        }
-    }
-
-    toggleGravity() {
-        if (this.currentMode === 'original') return;
-        this.isAttracting = !this.isAttracting;
-        this.modeElement.textContent = this.isAttracting ? 'ATTRACT' : 'REPEL';
-        this.modeElement.className = this.isAttracting ? 'mode-attract' : 'mode-repel';
-    }
-
-    reset(mode = 'original') {
-        this.score = 0;
-        this.entities = [];
-        this.particles = [];
-        this.isGameOver = false;
-        this.spawnInterval = 700;
-        this.modeTimer = 0;
-        this.startTime = Date.now();
-        this.scoreElement.textContent = '0';
-        this.gameOverScreen.classList.add('hidden');
-        this.isAttracting = true;
-        this.setupMode(mode);
-    }
-
-    spawnEntity() {
-        const side = Math.floor(Math.random() * 4);
-        let x, y;
-        if (side === 0) { x = Math.random() * this.width; y = -100; }
-        else if (side === 1) { x = this.width + 100; y = Math.random() * this.height; }
-        else if (side === 2) { x = Math.random() * this.width; y = this.height + 100; }
-        else { x = -100; y = Math.random() * this.height; }
-
-        const pos = new Vector2(x, y);
-        // Target a random Earth
-        const targetEarth = this.earths[Math.floor(Math.random() * this.earths.length)];
-        const toTarget = targetEarth.pos.copy().sub(pos).normalize();
-        const speed = 2.5 + Math.random() * 2.5;
-        const vel = toTarget.multiply(speed);
-
-        if (Math.random() < 0.2) {
-            // Spawn Item
-            const rand = Math.random();
-            let type = 'blue';
-            if (rand > 0.8) type = 'yellow';
-            else if (rand > 0.5) type = 'green';
-            this.entities.push(new Item(pos, vel, type));
-        } else {
-            // Spawn Asteroid
-            this.entities.push(new Asteroid(pos, vel));
-        }
-    }
-
-    createExplosion(pos, color, count = 10) {
-        for (let i = 0; i < count; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 4;
-            const vel = new Vector2(Math.cos(angle) * speed, Math.sin(angle) * speed);
-            this.particles.push(new Particle(pos.copy(), vel, color));
-        }
-    }
-
-    update(deltaTime) {
-        if (this.isGameOver) return;
-
-        // Smooth Mouse Position Lerp
-        const lerpFactor = 0.08;
-        this.smoothMousePos.x += (this.mousePos.x - this.smoothMousePos.x) * lerpFactor;
-        this.smoothMousePos.y += (this.mousePos.y - this.smoothMousePos.y) * lerpFactor;
-
-        // Survival Score (+10 per sec)
-        this.survivalTimer += deltaTime;
-        if (this.survivalTimer >= 1000) {
-            this.score += 10;
-            this.survivalTimer = 0;
-            this.scoreElement.textContent = Math.floor(this.score);
-        }
-
-        // Mode Specific Logic: Change Mode (Auto toggle every 5s)
-        if (this.currentMode === 'change') {
-            this.modeTimer += deltaTime;
-            if (this.modeTimer >= 5000) {
-                this.toggleGravity();
-                this.modeTimer = 0;
-            }
-        }
-
-        // Spawn Logic
-        this.spawnTimer += deltaTime;
-        if (this.spawnTimer >= this.spawnInterval) {
-            this.spawnEntity();
-            this.spawnTimer = 0;
-            // Scale difficulty
-            this.spawnInterval = Math.max(400, this.spawnInterval * 0.98);
-        }
-
-        // Update Particles
-        this.particles.forEach((p, i) => {
-            p.update();
-            if (p.destroyed) this.particles.splice(i, 1);
-        });
-
-        // Update Entities
-        this.entities.forEach((ent, i) => {
-            // Apply Gravity Force from Smooth Mouse
-            const distToMouse = Vector2.distance(ent.pos, this.smoothMousePos);
-            let inGravityField = false;
-
-            if (distToMouse < 360) {
-                const forceDir = this.smoothMousePos.copy().sub(ent.pos).normalize();
-                const forceMag = ((360 - distToMouse) / 250) * 0.8; 
-                
-                if (this.isAttracting) {
-                    ent.isBeingRepelled = false; // Reset state when attracted
-                    ent.applyForce(forceDir.multiply(forceMag));
-                } else {
-                    ent.isBeingRepelled = true; // Set state when repelled
-                    ent.applyForce(forceDir.multiply(-forceMag * 1.2));
-                }
-                inGravityField = true;
-            }
-
-            // Homing logic: If not in gravity field AND not in "flying out" state
-            if (ent instanceof Asteroid && !ent.isBeingRepelled) {
-                let closestEarth = this.earths[0];
-                let minDist = Vector2.distance(ent.pos, closestEarth.pos);
-                
-                this.earths.forEach(earth => {
-                    const d = Vector2.distance(ent.pos, earth.pos);
-                    if (d < minDist) {
-                        minDist = d;
-                        closestEarth = earth;
-                    }
-                });
-
-                const homeDir = closestEarth.pos.copy().sub(ent.pos).normalize();
-                ent.applyForce(homeDir.multiply(0.048)); // Further reduced homing force (by 40% from 0.08)
-            }
-
-            // Friction/Uniform Motion
-            const friction = ent instanceof Asteroid ? 1.0 : 0.985;
-            ent.update(friction);
-
-            // Check Collision with Earths
-            this.earths.forEach(earth => {
-                const distToEarth = Vector2.distance(ent.pos, earth.pos);
-                if (distToEarth < ent.radius + earth.radius) {
-                    if (ent instanceof Asteroid) {
-                        this.endGame();
-                    } else if (ent instanceof Item) {
-                        this.score += ent.scoreValue;
-                        this.scoreElement.textContent = Math.floor(this.score);
-                        this.createExplosion(ent.pos, ent.color, 15);
-                        this.entities.splice(i, 1);
-                    }
-                }
-            });
-
-            // Remove off-screen entities
-            const margin = 200;
-            if (ent.pos.x < -margin || ent.pos.x > this.width + margin || ent.pos.y < -margin || ent.pos.y > this.height + margin) {
-                this.entities.splice(i, 1);
-            }
-        });
-    }
-
-    draw() {
-        this.ctx.clearRect(0, 0, this.width, this.height);
-
-        // Draw Gravity Field Visual
-        const fieldGlow = this.ctx.createRadialGradient(
-            this.smoothMousePos.x, this.smoothMousePos.y, 0,
-            this.smoothMousePos.x, this.smoothMousePos.y, 150
-        );
-        const fieldColor = this.isAttracting ? '0, 242, 255' : '255, 0, 85';
-        fieldGlow.addColorStop(0, `rgba(${fieldColor}, 0.15)`);
-        fieldGlow.addColorStop(1, `rgba(${fieldColor}, 0)`);
-        
-        this.ctx.fillStyle = fieldGlow;
-        this.ctx.beginPath();
-        this.ctx.arc(this.smoothMousePos.x, this.smoothMousePos.y, 150, 0, Math.PI * 2);
-        this.ctx.fill();
-
-        // Draw Entities
-        this.particles.forEach(p => p.draw(this.ctx));
-        this.entities.forEach(ent => ent.draw(this.ctx));
-        this.earths.forEach(earth => earth.draw(this.ctx));
-    }
-
-    endGame() {
-        this.isGameOver = true;
-        this.finalScoreElement.textContent = Math.floor(this.score);
-        this.gameOverScreen.classList.remove('hidden');
-        this.earths.forEach(earth => {
-            this.createExplosion(earth.pos, '#00d2ff', 50);
-            this.createExplosion(earth.pos, '#ff4444', 30);
-        });
-    }
-
-    animate() {
-        const now = Date.now();
-        const deltaTime = now - (this.lastTime || now);
-        this.lastTime = now;
-
-        this.update(deltaTime);
-        this.draw();
-
-        requestAnimationFrame(() => this.animate());
-    }
-}
-
-// Start Game
-window.onload = () => {
-    new Game();
+// Application State
+const state = {
+    players: [], // Array of { name: string, traits: string[] }
+    currentPhase: 'registration', // registration, trait-entry, guessing
+    currentPlayerIndex: 0,
+    maxPlayers: 7
 };
+
+// DOM Elements
+const views = {
+    registration: document.getElementById('registration-view'),
+    traitEntry: document.getElementById('trait-entry-view'),
+    guessing: document.getElementById('guessing-view')
+};
+
+const elements = {
+    nameInputs: document.querySelectorAll('.player-name-input'),
+    startGameBtn: document.getElementById('start-game-btn'),
+    currentPlayerTitle: document.getElementById('current-player-title'),
+    traitTextarea: document.getElementById('player-traits'),
+    nextTraitBtn: document.getElementById('next-trait-btn'),
+    progressBar: document.getElementById('progress-bar'),
+    guessInput: document.getElementById('guess-input'),
+    guessBtn: document.getElementById('guess-btn'),
+    resultOverlay: document.getElementById('result-overlay'),
+    revealedName: document.getElementById('revealed-name'),
+    resetBtn: document.getElementById('reset-game-btn'),
+    subTitle: document.getElementById('sub-title')
+};
+
+/**
+ * Switch between application views
+ */
+function switchView(phase) {
+    state.currentPhase = phase;
+    Object.values(views).forEach(view => view.classList.remove('active'));
+    views[phase].classList.add('active');
+
+    if (phase === 'trait-entry') {
+        updateTraitEntryUI();
+    } else if (phase === 'guessing') {
+        elements.subTitle.textContent = '설명을 입력하면 AI가 누구인지 맞춥니다.';
+    }
+}
+
+/**
+ * Update UI for the current player in trait entry phase
+ */
+function updateTraitEntryUI() {
+    const playerName = state.players[state.currentPlayerIndex].name;
+    elements.currentPlayerTitle.textContent = `${playerName}님의 정보 입력 (${state.currentPlayerIndex + 1}/${state.maxPlayers})`;
+    elements.traitTextarea.value = '';
+    elements.traitTextarea.focus();
+    
+    const progress = ((state.currentPlayerIndex) / state.maxPlayers) * 100;
+    elements.progressBar.style.width = `${progress}%`;
+}
+
+/**
+ * Keyword similarity algorithm
+ */
+function findBestMatch(input) {
+    const inputWords = input.toLowerCase().split(/\s+/).filter(w => w.length > 1);
+    
+    let bestMatch = null;
+    let highestScore = -1;
+
+    state.players.forEach(player => {
+        let score = 0;
+        const playerTraits = player.traits.toLowerCase();
+        
+        inputWords.forEach(word => {
+            if (playerTraits.includes(word)) {
+                score++;
+            }
+        });
+
+        if (score > highestScore) {
+            highestScore = score;
+            bestMatch = player.name;
+        }
+    });
+
+    return bestMatch;
+}
+
+// Event Listeners
+
+// Phase 1: Registration
+elements.startGameBtn.addEventListener('click', () => {
+    const names = Array.from(elements.nameInputs).map(input => input.value.trim());
+    
+    if (names.some(name => name === '')) {
+        alert('모든 플레이어의 이름을 입력해 주세요.');
+        return;
+    }
+
+    state.players = names.map(name => ({ name, traits: '' }));
+    switchView('trait-entry');
+});
+
+// Phase 2: Trait Entry
+elements.nextTraitBtn.addEventListener('click', () => {
+    const traits = elements.traitTextarea.value.trim();
+    
+    if (traits.length < 5) {
+        alert('조금 더 자세한 정보를 입력해 주세요.');
+        return;
+    }
+
+    state.players[state.currentPlayerIndex].traits = traits;
+    state.currentPlayerIndex++;
+
+    if (state.currentPlayerIndex < state.maxPlayers) {
+        updateTraitEntryUI();
+    } else {
+        elements.progressBar.style.width = '100%';
+        setTimeout(() => switchView('guessing'), 500);
+    }
+});
+
+// Phase 3: Guessing
+elements.guessBtn.addEventListener('click', async () => {
+    const input = elements.guessInput.value.trim();
+    
+    if (input === '') {
+        alert('설명을 입력해 주세요.');
+        return;
+    }
+
+    // AI Processing Effect
+    elements.guessBtn.disabled = true;
+    elements.guessBtn.textContent = 'AI가 분석 중...';
+    
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    const match = findBestMatch(input);
+    elements.revealedName.textContent = match;
+    elements.resultOverlay.classList.remove('hidden');
+    
+    elements.guessBtn.disabled = false;
+    elements.guessBtn.textContent = '누구일까요?';
+});
+
+// Reset
+elements.resetBtn.addEventListener('click', () => {
+    state.currentPlayerIndex = 0;
+    state.players = [];
+    elements.resultOverlay.classList.add('hidden');
+    elements.guessInput.value = '';
+    elements.nameInputs.forEach(input => input.value = '');
+    elements.subTitle.textContent = '7명의 친구를 등록하고 특징을 입력하세요.';
+    switchView('registration');
+});
+
+// Initial Focus
+window.addEventListener('DOMContentLoaded', () => {
+    elements.nameInputs[0].focus();
+});
