@@ -13,9 +13,9 @@ const state = {
 
 // DOM Elements
 const views = {
-    registration: document.getElementById('registration-view'),
-    traitEntry: document.getElementById('trait-entry-view'),
-    guessing: document.getElementById('guessing-view')
+    'registration': document.getElementById('registration-view'),
+    'trait-entry': document.getElementById('trait-entry-view'),
+    'guessing': document.getElementById('guessing-view')
 };
 
 const elements = {
