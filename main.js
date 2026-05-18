@@ -2,6 +2,7 @@
  * AI Guessing Game: Who is it?
  * Main Application Logic
  */
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Application State
 const state = {
@@ -32,7 +33,8 @@ const elements = {
     resultOverlay: document.getElementById('result-overlay'),
     revealedName: document.getElementById('revealed-name'),
     resetBtn: document.getElementById('reset-game-btn'),
-    subTitle: document.getElementById('sub-title')
+    subTitle: document.getElementById('sub-title'),
+    apiKeyInput: document.getElementById('gemini-api-key')
 };
 
 /**
@@ -88,7 +90,7 @@ function updateTraitEntryUI() {
 }
 
 /**
- * Advanced Matching Algorithm
+ * Advanced Matching Algorithm (Legacy Fallback)
  */
 function findBestMatch(input) {
     // 1. Text Normalization
@@ -134,7 +136,6 @@ function findBestMatch(input) {
         score += uniqueMatchRatio * 2.0;
 
         // C. Length Normalization (avoid bias towards very long descriptions)
-        // We use a small penalty for the difference in word count
         const lengthDifference = Math.abs(inputWords.length - traitWords.length);
         const penalty = lengthDifference * 0.01;
         
@@ -147,6 +148,47 @@ function findBestMatch(input) {
     });
 
     return bestMatch;
+}
+
+/**
+ * AI Matching via Gemini API
+ */
+async function findBestMatchAI(input) {
+    const apiKey = elements.apiKeyInput.value.trim();
+    if (!apiKey) {
+        console.warn("API Key missing, falling back to legacy algorithm.");
+        return findBestMatch(input);
+    }
+
+    try {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+        const playerInfo = state.players.map(p => `- ${p.name}: ${p.traits}`).join('\n');
+        
+        const prompt = `
+            당신은 사람들의 특징을 분석하여 누구인지 맞추는 추측 전문가입니다.
+            다음은 7명의 정보입니다:
+            ${playerInfo}
+
+            사용자가 입력한 설명: "${input}"
+
+            위 설명을 바탕으로 가장 일치하는 사람의 이름만 정확히 출력하세요. 
+            다른 설명이나 문장은 필요 없습니다. 오직 이름만 출력하세요.
+            만약 아무도 일치하지 않는다면 가장 가능성이 높은 사람의 이름을 선택하세요.
+        `;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text().trim();
+        
+        // Ensure the returned text is one of our player names
+        const matchedPlayer = state.players.find(p => text.includes(p.name));
+        return matchedPlayer ? matchedPlayer.name : findBestMatch(input);
+    } catch (error) {
+        console.error("Gemini API Error:", error);
+        return findBestMatch(input);
+    }
 }
 
 // Event Listeners
@@ -204,9 +246,15 @@ elements.guessBtn.addEventListener('click', async () => {
     elements.guessBtn.disabled = true;
     elements.guessBtn.textContent = 'AI가 분석 중...';
     
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const startTime = Date.now();
+    const match = await findBestMatchAI(input);
+    
+    // Ensure the animation lasts at least 1.5 seconds for visual effect
+    const elapsedTime = Date.now() - startTime;
+    if (elapsedTime < 1500) {
+        await new Promise(resolve => setTimeout(resolve, 1500 - elapsedTime));
+    }
 
-    const match = findBestMatch(input);
     elements.revealedName.textContent = match;
     elements.resultOverlay.classList.remove('hidden');
     

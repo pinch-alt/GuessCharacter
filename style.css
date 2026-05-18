@@ -61,6 +61,31 @@
     #sub-title {
         color: var(--text-light);
         font-size: 1.1rem;
+        margin-bottom: 20px;
+    }
+
+    #api-key-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 15px;
+    }
+
+    #gemini-api-key {
+        width: 300px;
+        padding: 8px 15px;
+        border-radius: 20px;
+        border: 1px solid oklch(90% 0.02 260);
+        font-size: 0.8rem;
+        text-align: center;
+        background: oklch(100% 0 0 / 0.5);
+        transition: all 0.3s ease;
+    }
+
+    #gemini-api-key:focus {
+        width: 350px;
+        border-color: var(--primary);
+        background: var(--card-bg);
+        outline: none;
     }
 
     .card {
