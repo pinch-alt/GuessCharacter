@@ -133,20 +133,51 @@
         filter: brightness(1.1);
     }
 
-    .primary-btn:active {
-        transform: translateY(0);
+    .player-chips {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 25px;
     }
 
-    .secondary-btn {
-        margin-top: 20px;
-        padding: 12px 24px;
-        border-radius: 10px;
-        border: 2px solid var(--primary);
-        background: transparent;
-        color: var(--primary);
-        font-weight: 600;
-        cursor: pointer;
+    .chip {
+        padding: 6px 14px;
+        border-radius: 20px;
+        background: oklch(95% 0.01 260);
+        font-size: 0.85rem;
+        color: var(--text-light);
+        border: 1px solid oklch(90% 0.02 260);
         transition: all 0.3s ease;
+    }
+
+    .chip.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+        box-shadow: 0 4px 10px var(--primary-glow);
+    }
+
+    .chip.completed {
+        background: var(--secondary);
+        color: white;
+        border-color: var(--secondary);
+    }
+
+    .button-group {
+        display: flex;
+        gap: 15px;
+        width: 100%;
+    }
+
+    .button-group .primary-btn {
+        flex: 2;
+    }
+
+    .button-group .secondary-btn {
+        flex: 1;
+        margin-top: 0;
+        padding: 16px;
     }
 
     .secondary-btn:hover {

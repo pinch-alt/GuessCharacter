@@ -24,6 +24,8 @@ const elements = {
     currentPlayerTitle: document.getElementById('current-player-title'),
     traitTextarea: document.getElementById('player-traits'),
     nextTraitBtn: document.getElementById('next-trait-btn'),
+    prevTraitBtn: document.getElementById('prev-trait-btn'),
+    playerStatusList: document.getElementById('player-status-list'),
     progressBar: document.getElementById('progress-bar'),
     guessInput: document.getElementById('guess-input'),
     guessBtn: document.getElementById('guess-btn'),
@@ -42,10 +44,26 @@ function switchView(phase) {
     views[phase].classList.add('active');
 
     if (phase === 'trait-entry') {
+        renderPlayerChips();
         updateTraitEntryUI();
     } else if (phase === 'guessing') {
         elements.subTitle.textContent = '설명을 입력하면 AI가 누구인지 맞춥니다.';
     }
+}
+
+/**
+ * Render player chips to show progress
+ */
+function renderPlayerChips() {
+    elements.playerStatusList.innerHTML = '';
+    state.players.forEach((player, index) => {
+        const chip = document.createElement('div');
+        chip.className = 'chip';
+        if (index === state.currentPlayerIndex) chip.classList.add('active');
+        if (index < state.currentPlayerIndex) chip.classList.add('completed');
+        chip.textContent = player.name;
+        elements.playerStatusList.appendChild(chip);
+    });
 }
 
 /**
@@ -54,11 +72,19 @@ function switchView(phase) {
 function updateTraitEntryUI() {
     const playerName = state.players[state.currentPlayerIndex].name;
     elements.currentPlayerTitle.textContent = `${playerName}님의 정보 입력 (${state.currentPlayerIndex + 1}/${state.maxPlayers})`;
-    elements.traitTextarea.value = '';
+    elements.traitTextarea.value = state.players[state.currentPlayerIndex].traits || '';
     elements.traitTextarea.focus();
     
+    // Toggle Prev Button
+    if (state.currentPlayerIndex > 0) {
+        elements.prevTraitBtn.classList.remove('hidden');
+    } else {
+        elements.prevTraitBtn.classList.add('hidden');
+    }
+
     const progress = ((state.currentPlayerIndex) / state.maxPlayers) * 100;
     elements.progressBar.style.width = `${progress}%`;
+    renderPlayerChips();
 }
 
 /**
@@ -121,6 +147,13 @@ elements.nextTraitBtn.addEventListener('click', () => {
     } else {
         elements.progressBar.style.width = '100%';
         setTimeout(() => switchView('guessing'), 500);
+    }
+});
+
+elements.prevTraitBtn.addEventListener('click', () => {
+    if (state.currentPlayerIndex > 0) {
+        state.currentPlayerIndex--;
+        updateTraitEntryUI();
     }
 });
 
