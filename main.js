@@ -88,26 +88,60 @@ function updateTraitEntryUI() {
 }
 
 /**
- * Keyword similarity algorithm
+ * Advanced Matching Algorithm
  */
 function findBestMatch(input) {
-    const inputWords = input.toLowerCase().split(/\s+/).filter(w => w.length > 1);
+    // 1. Text Normalization
+    const normalize = (text) => text.replace(/[^\w\sㄱ-ㅎ가-힣]/g, ' ').toLowerCase().trim();
+    const cleanInput = normalize(input);
+    const inputWords = cleanInput.split(/\s+/).filter(w => w.length >= 1);
     
-    let bestMatch = null;
+    if (inputWords.length === 0) return state.players.length > 0 ? state.players[0].name : "???";
+
+    let bestMatch = state.players.length > 0 ? state.players[0].name : "???";
     let highestScore = -1;
 
     state.players.forEach(player => {
-        let score = 0;
-        const playerTraits = player.traits.toLowerCase();
+        const playerTraits = normalize(player.traits);
+        const traitWords = playerTraits.split(/\s+/).filter(w => w.length >= 1);
         
-        inputWords.forEach(word => {
-            if (playerTraits.includes(word)) {
-                score++;
+        let score = 0;
+
+        // A. Word Overlap (Intersection)
+        inputWords.forEach(iWord => {
+            // Direct word match
+            if (playerTraits.includes(iWord)) {
+                score += 1.0;
+                // Exact word match bonus (handling spaces)
+                if (new RegExp(`(^|\\s)${iWord}($|\\s)`).test(playerTraits)) {
+                    score += 0.5;
+                }
+            }
+            
+            // Partial match for longer words
+            if (iWord.length > 2) {
+                traitWords.forEach(tWord => {
+                    if (tWord.includes(iWord) || iWord.includes(tWord)) {
+                        score += 0.3;
+                    }
+                });
             }
         });
 
-        if (score > highestScore) {
-            highestScore = score;
+        // B. Bonus for matching multiple unique concepts
+        const matchedUniqueWords = inputWords.filter(w => playerTraits.includes(w));
+        const uniqueMatchRatio = matchedUniqueWords.length / inputWords.length;
+        score += uniqueMatchRatio * 2.0;
+
+        // C. Length Normalization (avoid bias towards very long descriptions)
+        // We use a small penalty for the difference in word count
+        const lengthDifference = Math.abs(inputWords.length - traitWords.length);
+        const penalty = lengthDifference * 0.01;
+        
+        const finalScore = score - penalty;
+
+        if (finalScore > highestScore) {
+            highestScore = finalScore;
             bestMatch = player.name;
         }
     });
