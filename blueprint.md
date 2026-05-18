@@ -20,3 +20,9 @@ A web-based guessing game where users register 7 people, input their personality
 3. [x] CSS Styling (Modern look, responsive, animations).
 4. [x] JavaScript Logic (State management, trait storage, matching algorithm).
 5. [x] Verification & Final Polishing.
+6. [x] Deployment (via Git to GitHub Pages).
+
+## Deployment Details
+- **Platform:** GitHub Pages
+- **Branch:** `gh-pages`
+- **URL:** https://pinch-alt.github.io/GuessCharacter/
