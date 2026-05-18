@@ -9,7 +9,8 @@ const state = {
     players: [], // Array of { name: string, traits: string[] }
     currentPhase: 'registration', // registration, trait-entry, guessing
     currentPlayerIndex: 0,
-    maxPlayers: 7
+    maxPlayers: 7,
+    isApiConnected: false
 };
 
 // DOM Elements
@@ -34,7 +35,9 @@ const elements = {
     revealedName: document.getElementById('revealed-name'),
     resetBtn: document.getElementById('reset-game-btn'),
     subTitle: document.getElementById('sub-title'),
-    apiKeyInput: document.getElementById('gemini-api-key')
+    apiKeyInput: document.getElementById('gemini-api-key'),
+    checkApiBtn: document.getElementById('check-api-btn'),
+    apiStatusDot: document.getElementById('api-status')
 };
 
 /**
@@ -155,8 +158,8 @@ function findBestMatch(input) {
  */
 async function findBestMatchAI(input) {
     const apiKey = elements.apiKeyInput.value.trim();
-    if (!apiKey) {
-        console.warn("API Key missing, falling back to legacy algorithm.");
+    if (!apiKey || !state.isApiConnected) {
+        console.warn("API Key missing or not verified, falling back to legacy algorithm.");
         return findBestMatch(input);
     }
 
@@ -187,11 +190,71 @@ async function findBestMatchAI(input) {
         return matchedPlayer ? matchedPlayer.name : findBestMatch(input);
     } catch (error) {
         console.error("Gemini API Error:", error);
+        updateApiStatus('error');
         return findBestMatch(input);
     }
 }
 
+/**
+ * Validate Gemini API Key
+ */
+async function validateApiKey() {
+    const apiKey = elements.apiKeyInput.value.trim();
+    if (!apiKey) {
+        alert("API Key를 입력해 주세요.");
+        return;
+    }
+
+    updateApiStatus('validating');
+    elements.checkApiBtn.disabled = true;
+
+    try {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        
+        // Simple test request
+        const result = await model.generateContent("Hi");
+        const response = await result.response;
+        
+        if (response.text()) {
+            updateApiStatus('connected');
+            state.isApiConnected = true;
+            alert("Gemini API가 성공적으로 연동되었습니다!");
+        } else {
+            throw new Error("Invalid response");
+        }
+    } catch (error) {
+        console.error("Validation Error:", error);
+        updateApiStatus('error');
+        state.isApiConnected = false;
+        alert("API Key가 유효하지 않거나 오류가 발생했습니다. 키를 다시 확인해 주세요.");
+    } finally {
+        elements.checkApiBtn.disabled = false;
+    }
+}
+
+/**
+ * Update API Status UI
+ */
+function updateApiStatus(status) {
+    elements.apiStatusDot.className = 'status-dot';
+    if (status !== 'disconnected') {
+        elements.apiStatusDot.classList.add(status);
+    }
+    
+    const titles = {
+        'connected': '연동됨 (정상)',
+        'validating': '연동 확인 중...',
+        'error': '오류 발생 (키 확인 필요)',
+        'disconnected': '연동되지 않음'
+    };
+    elements.apiStatusDot.title = titles[status] || titles.disconnected;
+}
+
 // Event Listeners
+
+// API Key Validation
+elements.checkApiBtn.addEventListener('click', validateApiKey);
 
 // Phase 1: Registration
 elements.startGameBtn.addEventListener('click', () => {
