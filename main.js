@@ -2,6 +2,14 @@
  * AI Guessing Game: Who is it?
  * Main Application Logic
  */
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+/**
+ * 보안 주의: 여기에 API 키를 직접 넣으면 웹사이트 소스 코드를 보는 누구나 키를 확인할 수 있습니다.
+ * 배포 시에는 소스 코드에 키를 노출하지 않는 것이 좋으나, 사용자의 요청에 따라 여기에 미리 연동합니다.
+ * 여기에 본인의 '무료 Gemini API 키'를 붙여넣으세요.
+ */
+const GEMINI_API_KEY = "YOUR_FREE_GEMINI_API_KEY_HERE";
 
 // Application State
 const state = {
@@ -139,31 +147,41 @@ function findBestMatch(input) {
 }
 
 /**
- * AI Matching via Firebase Cloud Functions
+ * AI Matching via Gemini API (Direct)
  */
 async function findBestMatchAI(input) {
+    // API 키가 설정되지 않은 경우 로컬 알고리즘 사용
+    if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_FREE_GEMINI_API_KEY_HERE") {
+        console.warn("Gemini API Key가 설정되지 않았습니다. 기본 알고리즘을 사용합니다.");
+        return findBestMatch(input);
+    }
+
     try {
+        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
         const playerInfo = state.players.map(p => `- ${p.name}: ${p.traits}`).join('\n');
         
-        const response = await fetch('/api/guess', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                playerInfo: playerInfo,
-                userInput: input
-            })
-        });
+        const prompt = `
+            당신은 사람들의 특징을 분석하여 누구인지 맞추는 추측 전문가입니다.
+            다음은 7명의 정보입니다:
+            ${playerInfo}
 
-        if (!response.ok) {
-            throw new Error('API request failed');
-        }
+            사용자가 입력한 설명: "${input}"
 
-        const data = await response.json();
-        return data.result || findBestMatch(input);
+            위 설명을 바탕으로 가장 일치하는 사람의 이름만 정확히 출력하세요. 
+            다른 설명이나 문장은 필요 없습니다. 오직 이름만 출력하세요.
+            만약 아무도 일치하지 않는다면 가장 가능성이 높은 사람의 이름을 선택하세요.
+        `;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text().trim();
+        
+        const matchedPlayer = state.players.find(p => text.includes(p.name));
+        return matchedPlayer ? matchedPlayer.name : findBestMatch(input);
     } catch (error) {
-        console.error("AI Proxy Error:", error);
+        console.error("Gemini API Error:", error);
         return findBestMatch(input);
     }
 }
